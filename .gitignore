@@ -1,4 +1,6 @@
 config.py
 todo.md
 __pycache__/
+db/__pycache__
+db/t.py
 getimg/__pycache__/

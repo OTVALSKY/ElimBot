@@ -19,7 +19,7 @@ async def genImageNoUser(Initials):
     d = ImageDraw.Draw(img)
     # draw multiline text
     d.multiline_text((xx, yy), Initials, font=fnt, fill=(255, 255, 255), align="center")
-   #img.save(output_path)
+    #img.save(output_path)
     res  = Image.Resampling.NEAREST
     bg_img = img
     fg_img = Image.open(overlay)

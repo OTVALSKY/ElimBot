@@ -1,13 +1,11 @@
 #bot by Otvalsky
 #Add bot to group chat, watch for bans administered, 
-#take banned user's pfp and process it with "neutralized" caption
+#take banned user's pfp and return it with "eliminate" caption
 #--init
 import asyncio
-import logging
-import sys
 import os
 #aiogram imports
-from aiogram import Bot, Dispatcher,  F
+from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message, ChatMemberUpdated, FSInputFile
 from aiogram.utils.markdown import hbold
@@ -17,16 +15,18 @@ from aiogram.filters.chat_member_updated import \
 #custom modules import
 import config as cfg
 import getphid
-import db
+from db import db 
 
 bot=Bot(token=cfg.TOKEN)
 dp = Dispatcher()
 script_folder = os.path.dirname(os.path.abspath(__file__))
+
 #--init
 
-#async def on_startup(): #init database
-    #db.db_start()
-    #print("bot init success")
+async def database():
+    await db.new_db()
+    print("db initalized..")
+
 
 ########### main logic begin
 @dp.message(Command(commands=["start", "go", "begin", "run", "wake up" ])) #hewwo uwu
@@ -46,7 +46,7 @@ async def bot_added_as_admin(event: ChatMemberUpdated):
     await event.answer(
         text=f"Привет! Спасибо, что добавили меня в чат "
              f"как администратора."
-              f"Я буду следить за забаненными пользователями и делать смешно."
+             f"Я буду следить за забаненными пользователями и делать смешно."
     )
 
 @dp.my_chat_member(
@@ -79,8 +79,9 @@ async def member_kicked(event: ChatMemberUpdated):
 #starter
 async def main():
     await bot.delete_webhook(drop_pending_updates=True) 
+    await database()
     await dp.start_polling(bot)
-    ############################run run run 
+    
 if __name__=="__main__":
     asyncio.run(main())
 #starter

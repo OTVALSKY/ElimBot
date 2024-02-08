@@ -1,29 +1,32 @@
 import sqlite3 as sql
-import os
-script_directory = os.path.dirname(os.path.abspath(__file__))
-dbPath = script_directory+'/tgBot.sqlite'
+from pathlib import Path
+#init variables
+#db
+here = Path(__file__).parent
+dbPath=here/"botdb.sqlite"
+#locale
 
-con = sql.connect(dbPath)
-cur = con.cursor()
+imgres = Path.glob(here.parent/"getimg"/"img", "overlay-??.png")
 
-async def db_start():
+
+d = { #declare dictionary with lang names and paths to overlay pics 
+
+}
+
+for path in imgres: #iterate over path in img directory to append into list 
+    d[str(path.name)[8:10]]=str(path)
+
+async def new_db():
     #create tables, ChatSettings is to store chats where bot were added and store 
     #overlay localisation ID(lang_id), which then can be joined on LangDef, where 
     #detailed Language name and path to overlay is located. 
-    await cur.execute(
-                    "CREATE TABLE IF NOT EXISTS ChatSettings("
-                    "id INTEGER PRIMARI KEY AUTOINCREMENT, "
-                    "chat_id INTEGER, "
-                    "lang_id INTEGER) "
-                    "CREATE TABLE IF NOT EXISTS LangDef("
-                    "id INTEGER PRIMARI KEY AUTOINCREMENT, "
-                    "Lang TEXT, "
-                    "LangImagePath TEXT)"
-                    )
-    con.commit()
-    return 
+    con = sql.connect(dbPath) #db handle
+    cur = con.cursor() #cur handle
+    cur.execute("CREATE TABLE IF NOT EXISTS ChatSettings(id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, lang_id INTEGER)")
+    cur.execute("CREATE TABLE IF NOT EXISTS LangDef(id INTEGER PRIMARY KEY AUTOINCREMENT, LangName TEXT, ovPath TEXT)")
 
- 
-    
+    for keys, values in d.items(): #insert data into lang table about out languages and path to Ov picture
+        cur.execute("INSERT INTO LangDef(LangName, ovPath) VALUES(?,?)", (keys,values))
 
-
+    cur.close()
+    con.commit()  #write to db 🔥
