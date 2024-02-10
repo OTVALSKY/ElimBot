@@ -1,6 +1,10 @@
 config.py
+t.py
 todo.md
 __pycache__/
-db/__pycache__
+db/__pycache__/
 db/t.py
 getimg/__pycache__/
+getimg/img/out.jpg
+lang/__pycache__/''
+.gitignore
