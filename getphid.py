@@ -2,15 +2,14 @@
 # get HD profile picture by user id, save it, overlay it, save again, return overlayed file into main
 # if user has no profile pictures, or they are hidden, generate image with black background, containg user initials,
 # then downscale to 320p and return file into main 
-import asyncio
-import os
 import config as cfg
 from aiogram import Bot
 from getimg import getimg
+from pathlib import Path
 
 bot=Bot(token=cfg.TOKEN)
-script_directory = os.path.dirname(os.path.abspath(__file__))
-dest = os.path.join(script_directory, 'getimg/img/photo.jpg') #folder to save image downloaded
+here = Path(__file__).parent
+dest = here/"getimg"/"img"/"photo.jpg"
 user_name=''
 
 async def get_initials(username):
@@ -26,14 +25,14 @@ class PhotoSize:
         self.height = height
         self.file_size = file_size
 
-async def find_max_pfp_size_by_uid(uid, uName):
+async def find_max_pfp_size_by_uid(uid, uName, cid):
     list=await bot.get_user_profile_photos(user_id=uid, offset=0,limit=1)
     nested_list = list.photos
     # Initialize variables to track the max file_size and corresponding file_id
     max_file_size = float('-inf')  # Set to negative infinity initially
     max_file_id = None
     if max_file_id is None:
-       output_path = await getimg.genImageNoUser(await get_initials(uName))
+       output_path = await getimg.genImageNoUser(await get_initials(uName),cid)
        return output_path
     else:
         for sublist in nested_list:
@@ -43,6 +42,6 @@ async def find_max_pfp_size_by_uid(uid, uName):
                     max_file_id = photo.file_id
         file=await bot.get_file(file_id=max_file_id)
         await bot.download_file(file_path=file.file_path, destination=dest) #file downloaded
-        output_path = await getimg.genImageForUser(dest)
+        output_path = await getimg.genImageForUser(dest,cid)
         return output_path
-     
+    

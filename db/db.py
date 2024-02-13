@@ -26,14 +26,18 @@ async def new_db():
     for keys, values in d.items(): #insert data into lang table about languages and path to overlay image
         cur.execute("INSERT INTO LangDef(LangName, ovPath) VALUES(?,?)", (keys,values))
     cur.close()
-    con.commit()  #write to db 🔥
+    con.commit()  #write to db
 
-async def getOV_path(lang_code):
-    #^func to get overlay image path by given language code on demand
+async def getOV_path(chat_id):
     con = sql.connect(dbPath)
     cur = con.cursor()
-    cur.execute(f"SELECT ovPath FROM LangDef WHERE LangName COLLATE NOCASE = {lang_code}")
-    ret = cur.fetchall()
+    cur.execute(f"SELECT ovPath FROM LangDef" 
+                f" LEFT JOIN ChatSettings on ChatSettings.lang_id=LangDef.id"
+                f" WHERE ChatSettings.chat_id = {chat_id}")
+    ret = (cur.fetchall()[0]) #get path to overlay image per request of imaging module. 
+    for row in ret:
+        ret=ret[0]
+    con.close()
     return ret
 
 def getall_lc(): #return an array\list\dict(dunno yet) of available languages
@@ -46,15 +50,21 @@ def getall_lc(): #return an array\list\dict(dunno yet) of available languages
     con.close()
     return ret
     
-async def save_chat(chat_id, lang_code): #savesettings for chat
+async def save_chat(chat_id, lang_code): #savesettings for chat, update if chat already exists in database
     con = sql.connect(dbPath)
     cur = con.cursor()
-    cur.execute (F"SELECT 1 FROM ChatSettings WHERE ID COLLATE NOCASE = {chat_id}")
+    cur.execute (F"SELECT chat_id FROM ChatSettings WHERE chat_id = {chat_id}")
+    chk = cur.fetchall()
     cur.execute (f"SELECT id FROM LangDef WHERE LangName COLLATE NOCASE = '{lang_code}'")
     data = cur.fetchall()
     for row in data:
         lang_id=row[0]
-    cur.execute(f"INSERT INTO ChatSettings(chat_id, lang_id) VALUES({chat_id},{lang_id})")
+    if not chk: #if chat id not exists in db, insert into it, else update language pref
+        print("insert setting")
+        cur.execute(f"INSERT INTO ChatSettings(chat_id, lang_id) VALUES({chat_id},{lang_id})")
+    else:
+        print("update setting")
+        cur.execute(f"UPDATE ChatSettings SET lang_id={lang_id} WHERE chat_id={chat_id}")
     cur.close()
     con.commit()
     return 0 #all good, language setting saved

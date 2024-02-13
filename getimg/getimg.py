@@ -1,14 +1,18 @@
 #init
-import os
+from pathlib import Path
+from db import db
 from PIL import Image, ImageDraw, ImageFont
-script_directory = os.path.dirname(os.path.abspath(__file__))
-overlay = os.path.join(script_directory, 'img/overlay-RU.png')
-output_path = os.path.join(script_directory, 'img/out.jpg')
+script_directory = Path(__file__).parent
+output_path = overlay = script_directory /"img"/"out.jpg"
 alpha=1.0
 box=(0,0)
+print(__name__)
+print(__package__)
+
 #init
 # create an image, regardless user has avatar or not
-async def genImageNoUser(Initials):
+async def genImageNoUser(Initials, cid):
+    overlay = await db.getOV_path(cid)
     bSize = (320,320)
     img = Image.new("RGB", bSize, (0, 0, 0))
     fnt = ImageFont.truetype(font="arial.ttf", size=150, index=0, encoding="UTF-8")
@@ -32,7 +36,8 @@ async def genImageNoUser(Initials):
     p.save(output_path)
     return output_path
 
-async def genImageForUser(dest):
+async def genImageForUser(dest, cid):
+    overlay = await db.getOV_path(cid)
     bg_img = Image.open(dest)
     fg_img = Image.open(overlay)
     fg_img_trans = Image.new("RGBA",fg_img.size)
