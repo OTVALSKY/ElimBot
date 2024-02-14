@@ -40,7 +40,7 @@ async def getOV_path(chat_id):
     con.close()
     return ret
 
-def getall_lc(): #return an array\list\dict(dunno yet) of available languages
+async def getall_lc(): #return an array\list\dict(dunno yet) of available languages
     con = sql.connect(dbPath)
     cur = con.cursor()
     cur.execute("SELECT LangName FROM LangDef")
@@ -66,5 +66,4 @@ async def save_chat(chat_id, lang_code): #savesettings for chat, update if chat 
         print("update setting")
         cur.execute(f"UPDATE ChatSettings SET lang_id={lang_id} WHERE chat_id={chat_id}")
     cur.close()
-    con.commit()
-    return 0 #all good, language setting saved
+    con.commit() #all good, language setting saved

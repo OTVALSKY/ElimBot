@@ -18,15 +18,16 @@ RESTRICTED, ADMINISTRATOR, CREATOR, IS_NOT_MEMBER, IS_MEMBER
 import config as cfg                #bot token and stuff
 import getphid                      #get user profile picture module
 from lang.strings import GetMsg     #locale strings
-from db import db                            #settingsDB
+from db import db                   #settingsDB
 
 bot=Bot(token=cfg.TOKEN)
 dp = Dispatcher()
 script_folder = os.path.dirname(os.path.abspath(__file__))
 builder = ReplyKeyboardBuilder() #keyboard builder 
-kbrm = ReplyKeyboardRemove(remove_keyboard=True)
+kbrm = ReplyKeyboardRemove(remove_keyboard=True) #handle to kill keyboard
 
-async def init_db():
+
+async def init_db(): #create database, or  ensure it exits already
     if os.path.isfile(script_folder+"/db/botdb.sqlite"):
             print("db exists..")
             return
@@ -34,10 +35,18 @@ async def init_db():
         await db.new_db()
         print("db created..")
 
+
+async def isAdmin(chat_id, user_id): #function to check if user is admin and has right to save language settings
+    uobj = await bot.get_chat_member(chat_id, user_id)
+    uStatus = uobj.status
+    if uStatus in ("administrator", 'creator', 'owner'):
+        return True
+    else:
+        return False
 #init end
 
 
-########### main logic begin
+########### main logic begin=
 @dp.message(Command(commands=["go", "begin", "run", "wake up", "start"])) #start whatever
 async def start(message: Message):
     msg = await GetMsg(message.from_user.language_code, "hi") #return localized message
@@ -60,9 +69,9 @@ async def bot_added_as_admin(event: ChatMemberUpdated):
         # Create the keyboard
         for l in lcl:  #loop to construct a keyboard with available languages
             builder.button(text=l)
-        builder.adjust(3) #make it 3 buttons on one row 
+        #builder.adjust(3) #make it 3 buttons on one row 
         # Send the message with the keyboard
-        await event.answer(f"[{event.from_user.full_name}](tg://user?id={event.from_user.id}), "+msg, parse_mode="markdownV2", reply_markup=builder.as_markup(resize_keybpoard=True, one_time_keyboard=True, selective=True))
+        await event.answer(f"[{event.from_user.full_name}](tg://user?id={event.from_user.id}), "+msg, parse_mode="markdownV2", reply_markup=builder.as_markup(one_time_keyboard=True, selective=True, resize_keyboard=True))
 
 
 @dp.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=IS_NOT_MEMBER >> MEMBER))
@@ -79,23 +88,24 @@ async def member_kicked(event: ChatMemberUpdated):
     await bot.send_photo(chat_id=cid, photo=FSOut)
 
 
-@dp.message(F.text.lower().in_({'en', 'ru', 'ua'}))
-async def echo(message: Message):
-    umsg=message.text #user choice on keyboard  
-    msg = await GetMsg(str.lower(umsg), "save") #bot's reply, get locale str right for languguage user just selected. neat.  
-    if umsg in (db.getall_lc()):
-        await message.answer(msg, reply_markup=kbrm)
-        await db.save_chat(message.chat.id, umsg) #write\update chat's language prefernce to db
-    else:
-        print("err: language does not exist in db, defaulting to english..")
-        print ()
-        await message.answer(msg, reply_markup=kbrm)
-        await db.save_chat(message.chat.id,'en') #write defaulted chat's language prefernce to db
+@dp.message(F.text.in_({'EN', 'RU', 'UA'}))
+#@dp.message(F.text.startswith("show"), F.text.endswith("example"))
+async def confirm(message: Message):
+    adm = await isAdmin(message.chat.id, message.from_user.id)
+    if adm:
+        umsg=message.text #user choice on keyboard  
+        msg = await GetMsg(str.lower(umsg), 'save') #bot's reply, get locale str right for languguage user just selected. neat.  
+        L =  await db.getall_lc()
+        if umsg in L: #check if user's choice is in db
+            await db.save_chat(message.chat.id, umsg) #write\update chat's language prefernce to db
+            await message.answer(msg, reply_markup=kbrm)
+            print('saved choice..')
+        else:
+            await db.save_chat(message.chat.id,'en') #write defaulted chat's language prefernce to db
+            await message.answer(msg, reply_markup=kbrm) #confirm and destroy keyboard
+            print('defaulted to english...')
 ########### main logic end 
 
-# @dp.message()
-# async def echo(event: ChatMemberUpdated):
-#     print(event)
 
 #starter################################################
 async def main():
