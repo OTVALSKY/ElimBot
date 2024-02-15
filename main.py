@@ -65,10 +65,10 @@ async def bot_added_as_admin(event: ChatMemberUpdated):
     msg = await GetMsg(event.from_user.language_code, "chlang") #show "shoose language" message on language of user adding the bot
     #msg = await GetMsg(Message.forward_from_chat.language_code, "chlang")
     if chat_info.permissions.can_send_messages:
-        lcl = db.getall_lc() #get language list from db | lcl for langcuge code list
+        lcl = await db.getall_lc() #get language list from db | lcl for langcuge code list
         # Create the keyboard
-        for l in lcl:  #loop to construct a keyboard with available languages
-            builder.button(text=l)
+        for asuka in lcl:  #loop to construct a keyboard with available languages
+            builder.button(text=asuka)
         #builder.adjust(3) #make it 3 buttons on one row 
         # Send the message with the keyboard
         await event.answer(f"[{event.from_user.full_name}](tg://user?id={event.from_user.id}), "+msg, parse_mode="markdownV2", reply_markup=builder.as_markup(one_time_keyboard=True, selective=True, resize_keyboard=True))
@@ -76,7 +76,7 @@ async def bot_added_as_admin(event: ChatMemberUpdated):
 
 @dp.my_chat_member(ChatMemberUpdatedFilter(member_status_changed=IS_NOT_MEMBER >> MEMBER))
 async def bot_added_as_member(event: ChatMemberUpdated):
-    msg = await GetMsg(event.from_user.language_code, "notadmin") #show "shoose language" message on language of user adding the bot
+    msg = await GetMsg(event.from_user.language_code, "notadmin")
     await event.answer(msg)
 
 
@@ -95,8 +95,8 @@ async def confirm(message: Message):
     if adm:
         umsg=message.text #user choice on keyboard  
         msg = await GetMsg(str.lower(umsg), 'save') #bot's reply, get locale str right for languguage user just selected. neat.  
-        L =  await db.getall_lc()
-        if umsg in L: #check if user's choice is in db
+        l =  await db.getall_lc()
+        if umsg in l: #check if user's choice is in db
             await db.save_chat(message.chat.id, umsg) #write\update chat's language prefernce to db
             await message.answer(msg, reply_markup=kbrm)
             print('saved choice..')
