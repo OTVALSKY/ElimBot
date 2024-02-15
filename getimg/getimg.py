@@ -6,16 +6,15 @@ script_directory = Path(__file__).parent
 output_path = overlay = script_directory /"img"/"out.jpg"
 alpha=1.0
 box=(0,0)
-print(__name__)
-print(__package__)
 
 #init
 # create an image, regardless user has avatar or not
 async def genImageNoUser(Initials, cid):
     overlay = await db.getOV_path(cid)
+    fnt = script_directory/"fnt.ttf"
     bSize = (320,320)
     img = Image.new("RGB", bSize, (0, 0, 0))
-    fnt = ImageFont.truetype(font="arial.ttf", size=150, index=0, encoding="UTF-8")
+    fnt = ImageFont.truetype(str(fnt), size=150, index=0, encoding="UTF-8")
     draw = ImageDraw.Draw(img)
     x, y, w, h = draw.textbbox((0,0), text=Initials, font=fnt, align="center", font_size=150)
     xx = (320 - w) // 2 #calc coords to center image
