@@ -1,0 +1,14 @@
+[Unit]
+Description=Telegram Bot "Elim Bot"
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=otval
+ExecStart=/bin/python3 /home/USERNAME/ElimBot/main.py
+
+[Install]
+WantedBy=multi-user.target
